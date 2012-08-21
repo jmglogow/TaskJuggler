@@ -301,6 +301,8 @@ class TaskJuggler
               false, false,   false, nil ],
         [ 'pathcriticalness', 'Path Criticalness', FloatAttribute,
               false, false,   true, 0.0 ],
+        [ 'schedcriticalness', 'Scheduler Criticalness', FloatAttribute,
+              false, false,   true, 0.0 ],
         [ 'precedes',  'Following tasks', DependencyListAttribute,
               true,  false,   true,  [] ],
         [ 'priority',  'Priority',     FixnumAttribute,
@@ -1163,86 +1165,14 @@ class TaskJuggler
                "Finishing scenario #{scenario(scIdx).get('name')} completed")
     end
 
-    # Schedule all tasks for the given Scenario with index +scIdx+.
-    def scheduleScenario(scIdx)
-      tasks = PropertyList.new(@tasks)
-      # Only care about leaf tasks that are not milestones and aren't
-      # scheduled already (marked with the 'scheduled' attribute).
-      tasks.delete_if { |task| !task.leaf? ||
-                               task['milestone', scIdx] ||
-                               task['scheduled', scIdx] }
-
-      Log.enter('scheduleScenario', "#{tasks.length} leaf tasks")
-      # The sorting of the work item list determines which tasks will get their
-      # resources first. The first sorting criterium is the user specified task
-      # priority. The second criterium is the scheduler determined priority
-      # stored in the pathcriticalness attribute. That way, the user can always
-      # override the scheduler determined priority. To always have a defined
-      # order, the third criterium is the sequence number.
-      tasks.setSorting([ [ 'priority', false, scIdx ],
-                         [ 'pathcriticalness', false, scIdx ],
-                         [ 'seqno', true, -1 ] ])
-      tasks.sort!
-      totalTasks = tasks.length
-
-      # Enter the main scheduling loop. This loop is only terminated when all
-      # tasks have been scheduled or another thread has set the breakFlag to
-      # true.
-      Log.startProgressMeter("Scheduling scenario " +
-                             "#{scenario(scIdx).get('name')}")
-      failedTasks = []
-      while !tasks.empty?
-        # Only update the progress bar every 10 completed tasks.
-        if tasks.length % 10 == 0
-          percentComplete = (totalTasks - tasks.length).to_f / totalTasks
-          Log.progress(percentComplete)
-        end
-
-        # Now find the task with the highest priority that can be scheduled
-        # and schedule it.
-        taskToRemove = nil
-        tasks.each do |task|
-          # Task not ready? Ignore it.
-          next unless task.readyForScheduling?(scIdx)
-
-          unless task.schedule(scIdx)
-            failedTasks << task
-          end
-          # The task has been completed or failed. But we can remove it from
-          # the todo list.
-          taskToRemove = task
-          # The scheduling of this task may cause other higher priority tasks
-          # to be ready now. So we terminate the inner loop and start at the
-          # top of the list again.
-          break
-        end
-
-        # There should always be a task to be removed. If not, the scheduler
-        # has found a set of tasks that deadlock each other.
-        if taskToRemove
-          tasks.delete(taskToRemove)
-        elsif failedTasks.empty?
-          warning('deadlock',
-                  'Some tasks reference each other but don\'t provide ' +
-                  'enough information to start the scheduling. The ' +
-                  'scheduler does not know where to start scheduling ' +
-                  'these tasks. You need to provide more fixed dates ' +
-                  'or dependencies on already scheduled tasks.')
-          failedTasks = tasks
-          break
-        else
-          # We have some tasks that cannot be scheduled.
-          break
-        end
-      end
-
-      # Check for failed tasks and report the first 10 of them as
+    def printUnscheduled(scIdx, tasks,len)
+      # Check for unscheduled tasks and report the first 10 of them as
       # warnings.
-      unless failedTasks.empty?
+      unless tasks.empty?
         warning('unscheduled_tasks',
-                "#{failedTasks.length} tasks could not be scheduled")
+                "#{tasks.length} of #{len} tasks could not be scheduled")
         i = 0
-        failedTasks.each do |t|
+        tasks.each do |t|
           warning('unscheduled_task',
                   "Task #{t.fullId}: " +
                   "#{t['start', scIdx] ? t['start', scIdx] : '<?>'} -> " +
@@ -1254,6 +1184,91 @@ class TaskJuggler
         end
         Log.stopProgressMeter
         return false
+      end
+    end
+
+    # Schedule all tasks for the given Scenario with index +scIdx+.
+    def scheduleScenario(scIdx)
+      tasks_asap = PropertyList.new(@tasks)
+
+      # Only care about leaf tasks that are not milestones are aren't
+      # scheduled already (due to bookings).
+      tasks_asap.delete_if { |task| !task.leaf? ||
+                                    task['milestone', scIdx] ||
+                                    task['scheduled', scIdx] }
+
+      # Split into ASAP and ALAP lists
+      tasks_alap = PropertyList.new(tasks_asap)
+      tasks_asap.delete_if { |task| !task['forward', scIdx] }
+      tasks_alap.delete_if { |task| task['forward', scIdx] }
+
+      Log.enter('scheduleScenario', "#{tasks.length} leaf tasks")
+      # The sorting of the work item list determines which tasks will get their
+      # resources first. The first sorting criterium is the user specified task
+      # priority. The second criterium is the scheduler determined priority
+      # stored in the pathcriticalness attribute. That way, the user can always
+      # override the scheduler determined priority. To always have a defined
+      # order, the third criterium is the sequence number.
+      tasks_asap.setSorting([ [ 'schedcriticalness', false, scIdx ],
+                              [ 'seqno', true, -1 ] ])
+      tasks_asap.sort!
+      tasks_alap.setSorting([ [ 'schedcriticalness', false, scIdx ],
+                              [ 'seqno', true, -1 ] ])
+      tasks_alap.sort!
+
+      asapTasks = tasks_asap.length
+      alapTasks = tasks_alap.length
+      totalTasks = asapTasks + alapTasks
+
+      # Enter the main scheduling loop. This loop is only terminated when all
+      # tasks have been scheduled or another thread has set the breakFlag to
+      # true.
+      Log.startProgressMeter("Scheduling scenario " +
+                             "#{scenario(scIdx).get('name')}")
+
+      lowerLimit = dateToIdx(@attributes['start'])
+      upperLimit = dateToIdx(@attributes['end'])
+      nowIdx = dateToIdx(@attributes['now'])
+      projectionMode = scenario(scIdx).get('projection')
+
+      [ tasks_asap, tasks_alap ].zip([asapTasks, alapTasks]).each do |tasks,len|
+        while !tasks.empty? and lowerLimit <= upperLimit
+          # Only update the progress bar every 10 completed tasks.
+          if (tasks_asap.length + alapTasks) % 10 == 0
+            percentComplete = (totalTasks - tasks_asap.length).to_f / totalTasks
+            Log.progress(percentComplete)
+          end
+  
+          # Now find the task with the highest priority that can be scheduled
+          # and schedule it.
+          taskToRemove = nil
+          tasks.each do |task|
+            # Task not ready? Ignore it.
+            next unless task.readyForScheduling?(scIdx)
+  
+            unless task.scheduleSlot(scIdx, lowerLimit)
+              # The task has been completed => remove it from the todo list.
+              taskToRemove = task
+            end
+  
+            # We don't have any resources for the slot => break
+            break if !anyResourceAvailable?(lowerLimit) ||
+                     (projectionMode && (nowIdx > lowerLimit))
+          end
+  
+          # There should always be a task to be removed. If not, the scheduler
+          # has found a set of tasks that deadlock each other.
+          if taskToRemove
+            tasks.delete(taskToRemove)
+          end
+          lowerLimit += 1
+        end
+  
+        # Check for failed tasks and report the first 10 of them as
+        # warnings.
+        unless printUnscheduled(scIdx, tasks, len)
+          return false
+        end
       end
 
       Log.stopProgressMeter

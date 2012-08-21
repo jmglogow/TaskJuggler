@@ -660,6 +660,12 @@ class TaskJuggler
     # provided by the class *Scenario classes. In case we can't find a function
     # called for the base class we try to find it in corresponding *Scenario
     # class.
+    # Just to make this clear. If you call a missing function the first
+    # parameter has to be the scenarioIdx, which is not send to the method
+    # call, i.e. it's stripped from the call, e.g. 
+    #   def dummy(arg1)
+    #     ...
+    #   task.dummy(scenarioIdx, arg1)
     def method_missing(func, scenarioIdx, *args, &block)
       @data[scenarioIdx].send(func, *args, &block)
     end

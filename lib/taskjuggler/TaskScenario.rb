@@ -30,7 +30,8 @@ class TaskJuggler
           competitors criticalness depends duration
           effort end forward gauge length
           maxend maxstart minend minstart milestone pathcriticalness
-          precedes priority scheduled shifts start status ).each do |attr|
+          precedes priority schedcriticalness scheduled shifts start
+          status ).each do |attr|
         @property[attr, @scenarioIdx]
       end
 
@@ -822,6 +823,7 @@ class TaskJuggler
     def calcCriticalness
       @criticalness = 0.0
       @pathcriticalness = nil
+      @schedcriticalness = nil
 
       # Users feel that milestones are somewhat important. So we use an
       # arbitrary value larger than 0 for them. We make it priority dependent,
@@ -835,16 +837,22 @@ class TaskJuggler
       # Task without efforts of allocations are not critical.
       return if @effort <= 0 || @candidates.empty?
 
-      # Determine the average criticalness of all allocated resources.
+      # Determine the criticalness of all allocated resources.
       criticalness = 0.0
       @candidates.each do |resource|
         criticalness += resource['criticalness', @scenarioIdx]
       end
-      criticalness /= @candidates.length
+
+      # It's harder to assign multiple persons in parallel so just add
+      # criticalities.
+#      criticalness /= @candidates.length
 
       # The task criticalness is the product of effort and average resource
       # criticalness.
       @criticalness = @effort * criticalness
+      if not @milestone
+        @criticalness *= @priority / 500.0
+      end
     end
 
     # The path criticalness is a measure for the overall criticalness of the
@@ -900,6 +908,7 @@ class TaskJuggler
       end
 
       @pathcriticalness = maxCriticalness
+      @schedcriticalness = maxCriticalness
     end
 
     # Check if the task is ready to be scheduled. For this it needs to have at
@@ -926,36 +935,21 @@ class TaskJuggler
     # or end date has been determined and other tasks may be ready for
     # scheduling now.
     def schedule
-      # Check if the task has already been scheduled e. g. by propagateDate().
       return true if @scheduled
 
       logTag = "schedule_#{@property.id}"
-      Log.enter(logTag, "Scheduling task #{@property.id}")
-      # Compute the date of the next slot this task wants to have scheduled.
-      # This must either be the first slot ever or it must be directly
-      # adjecent to the previous slot. If this task has not yet been scheduled
-      # at all, @currentSlotIdx is still nil. Otherwise it contains the index
-      # of the last scheduled slot.
       if @forward
-        # On first call, the @currentSlotIdx is not set yet. We set it to the
-        # start slot index or the 'now' slot if we are in projection mode and
-        # the tasks has allocations.
         if @currentSlotIdx.nil?
           @currentSlotIdx = @project.dateToIdx(
             @projectionMode && (@project['now'] > @start) && !@allocate.empty? ?
             @project['now'] : @start)
         end
       else
-        # On first call, the @currentSlotIdx is not set yet. We set it to the
-        # slot index of the slot before the end slot.
         if @currentSlotIdx.nil?
           @currentSlotIdx = @project.dateToIdx(@end) - 1
         end
       end
 
-      # Schedule all time slots from slot in the scheduling direction until
-      # the task is completed or a problem has been found.
-      # The task may not excede the project interval.
       lowerLimit = @project.dateToIdx(@project['start'])
       upperLimit = @project.dateToIdx(@project['end'])
       delta = @forward ? 1 : -1
@@ -1290,11 +1284,6 @@ class TaskJuggler
       query.sortable = query.numerical = count
       # For the string output, we only use integer numbers.
       query.string = "#{count.to_i}"
-    end
-
-    def query_competitorcount(query)
-      query.sortable = query.numerical = @competitors.length
-      query.string = "#{@competitors.length}"
     end
 
     def query_complete(query)
@@ -1732,9 +1721,13 @@ class TaskJuggler
       list
     end
 
-  private
+    def scheduleSlot(slotIdx = nil)
+      if slotIdx.nil?
+        slotIdx = @currentSlotIdx
+      else
+        @currentSlotIdx = slotIdx
+      end
 
-    def scheduleSlot
       # Tasks must always be scheduled in a single contigous fashion.
       # Depending on the scheduling direction the next slot must be scheduled
       # either right before or after this slot. If the current slot is not
@@ -1748,24 +1741,24 @@ class TaskJuggler
           # The specified effort has been reached. The task has been fully
           # scheduled now.
           if @forward
-            propagateDate(@project.idxToDate(@currentSlotIdx + 1), true, true)
+            propagateDate(@project.idxToDate(slotIdx + 1), true, true)
           else
-            propagateDate(@project.idxToDate(@currentSlotIdx), false, true)
+            propagateDate(@project.idxToDate(slotIdx), false, true)
           end
           return false, alloc_resources
         end
       when :lengthTask
         alloc_resources = bookResources
         # The doneLength is only increased for global working time slots.
-        @doneLength += 1 if @project.isWorkingTime(@currentSlotIdx)
+        @doneLength += 1 if @project.isWorkingTime(slotIdx)
 
         # If we have reached the specified duration or lengths, we set the end
         # or start date and propagate the value to neighbouring tasks.
         if @doneLength >= @length
           if @forward
-            propagateDate(@project.idxToDate(@currentSlotIdx + 1), true)
+            propagateDate(@project.idxToDate(slotIdx + 1), true)
           else
-            propagateDate(@project.idxToDate(@currentSlotIdx), false)
+            propagateDate(@project.idxToDate(slotIdx), false)
           end
           return false, alloc_resources
         end
@@ -1779,9 +1772,9 @@ class TaskJuggler
         # or start date and propagate the value to neighbouring tasks.
         if @doneDuration >= @duration
           if @forward
-            propagateDate(@project.idxToDate(@currentSlotIdx + 1), true)
+            propagateDate(@project.idxToDate(slotIdx + 1), true)
           else
-            propagateDate(@project.idxToDate(@currentSlotIdx), false)
+            propagateDate(@project.idxToDate(slotIdx), false)
           end
           return false, alloc_resources
         end
@@ -1791,8 +1784,8 @@ class TaskJuggler
 
         # Depending on the scheduling direction we can mark the task as
         # scheduled once we have reached the other end.
-        if (@forward && @currentSlotIdx >= @endIdx) |
-           (!@forward && @currentSlotIdx <= @startIdx)
+        if (@forward && slotIdx >= @endIdx) |
+           (!@forward && slotIdx <= @startIdx)
           markAsScheduled
           @property.parents.each do |parent|
             parent.scheduleContainer(@scenarioIdx)
@@ -1805,6 +1798,8 @@ class TaskJuggler
 
       return true, alloc_resources
     end
+
+  private
 
     def bookResources
       # First check if there is any resource at all for this slot.
