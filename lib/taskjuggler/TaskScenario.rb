@@ -993,7 +993,7 @@ class TaskJuggler
 
       # For leaf tasks, propagate start may set the date. Container task dates
       # are only set in scheduleContainer().
-      if @property.leaf?
+      if @property.leaf? and !@scheduled
         instance_variable_set(('@' + thisEnd).intern, date)
         typename = 'Task'
         if @durationType == :startEndTask
@@ -1010,6 +1010,7 @@ class TaskJuggler
         # Start and end date of a milestone are identical.
         markAsScheduled
         if a(otherEnd).nil?
+          instance_variable_set(('@' + otherEnd).intern, date)
           propagateDate(a(thisEnd), !atEnd)
         end
       elsif !@scheduled && @start && @end &&
