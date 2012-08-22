@@ -23,7 +23,11 @@ class TaskJuggler
     # Create a new TaskScenario object.
     def initialize(task, scenarioIdx, attributes)
       super
-      # Attributed are only really created when they are accessed the first
+
+      @startIdx = nil
+      @endIdx = nil
+
+      # Attributes are only really created when they are accessed the first
       # time. So make sure some needed attributes really exist so we don't
       # have to check for existance each time we access them.
       %w( allocate assignedresources booking charge chargeset complete
@@ -38,6 +42,10 @@ class TaskJuggler
       # A list of all allocated leaf resources.
       @candidates = []
       @dCache = DataCache.instance
+    end
+
+    def scheduled?
+      @assignedresources.empty?
     end
 
     def markAsScheduled
@@ -969,6 +977,9 @@ class TaskJuggler
     # Set a new start or end date and propagate the value to all other
     # task ends that have a direct dependency to this end of the task.
     def propagateDate(date, atEnd, ignoreEffort = false)
+      # Break recursion at already scheduled tasks.
+#      return if @scheduled
+
       logTag = "propagateDate_#{@property.id}_#{atEnd ? 'end' : 'start'}"
       Log.enter(logTag, "Propagating #{atEnd ? 'end' : 'start'} date " +
                         "to task #{@property.id}")
@@ -1000,7 +1011,7 @@ class TaskJuggler
         Log.msg { "Update #{typename} #{@property.fullId}: #{period_to_s}" }
       end
 
-      if @milestone
+      if @milestone 
         # Start and end date of a milestone are identical.
         markAsScheduled
         if a(otherEnd).nil?
@@ -1132,10 +1143,12 @@ class TaskJuggler
       # Propagate the dates to other dependent tasks.
       if @start.nil? || @start > nStart
         @start = nStart
+        @startIdx = @project.dateToIdx(nStart)
         startSet = true
       end
       if @end.nil? || @end < nEnd
         @end = nEnd
+        @endIdx = @project.dateToIdx(nEnd)
         endSet = true
       end
       unless @start && @end
@@ -1721,11 +1734,46 @@ class TaskJuggler
       list
     end
 
+    # This pushes tasks, which where already scheduled but their expected
+    # duration / length / effort is smaller then the actual duration.
+    def updateSchedCriticality
+      @schedcriticalness = @pathcriticalness
+
+      unless @assignedresources.empty?
+        @schedcriticalness *= 1.5
+
+        duration = @currentSlotIdx - @startIdx
+        unless duration >= 1
+          adjust = 1
+          case @durationType
+          when :effortTask
+            adjust *= (duration / @doneEffort) * 2
+          when :lengthTask
+            adjust *= (duration / @doneLength) * 2
+          when :durationTask
+            adjust *= (duration / @doneDuration) * 2
+          end
+          @schedcriticalness *= adjust if adjust > 1.0
+        end
+
+        true
+      else
+        false
+      end
+    end
+
     def scheduleSlot(slotIdx = nil)
+      alloc_resources = 0
+
       if slotIdx.nil?
         slotIdx = @currentSlotIdx
       else
-        @currentSlotIdx = slotIdx
+        if @currentSlotIdx.nil?
+          @currentSlotIdx = slotIdx
+          return true, alloc_resources
+        else
+          @currentSlotIdx = slotIdx
+        end
       end
 
       # Tasks must always be scheduled in a single contigous fashion.
@@ -1909,13 +1957,15 @@ class TaskJuggler
           if @effort > 0 && @assignedresources.empty?
             if @forward
               @start = @project.idxToDate(@currentSlotIdx)
+              @startIdx = @currentSlotIdx
               Log.msg { "Task #{@property.fullId} first assignment: " +
                         "#{period_to_s}" }
               @startsuccs.each do |task, onEnd|
                 task.propagateDate(@scenarioIdx, @start, false, true)
               end
             else
-              @end = @project.idxToDate(@currentSlotIdx + 1)
+              @endIdx = @currentSlotIdx + 1
+              @end = @project.idxToDate(@qndIdx)
               Log.msg { "Task #{@property.fullId} last assignment: " +
                         "#{period_to_s}" }
               @endpreds.each do |task, onEnd|
@@ -2014,6 +2064,7 @@ class TaskJuggler
         firstSlotDate = @project.idxToDate(firstSlotIdx)
         if @start.nil? || firstSlotDate > @start
           @start = firstSlotDate
+          @startIdx = firstSlotIdx
           Log.msg { "Task #{@property.fullId} first booking: #{period_to_s}" }
         end
       end
@@ -2022,12 +2073,14 @@ class TaskJuggler
       # supplied bookings and set the task end to the last booked slot.
       # Also the task is marked as scheduled.
       if lastSlotIdx && !@scheduled
-        tentativeEnd = @project.idxToDate(lastSlotIdx + 1)
+        tentativeEndIdx = lastSlotIdx + 1
+        tentativeEnd = @project.idxToDate(tentativeEndIdx)
         slotDuration = @project['scheduleGranularity']
 
         if @effort > 0
           if @doneEffort >= @effort
             @end = tentativeEnd
+            @endIdx = tentativeEndIdx
             markAsScheduled
           end
         elsif @length > 0
@@ -2040,8 +2093,8 @@ class TaskJuggler
             # Continue not only until the @length has been reached, but also
             # the tentativeEnd date. This allows us to detect overbookings.
             if @doneLength >= @length && date >= tentativeEnd
-              endDate = @project.idxToDate(idx + 1)
-              @end = [ endDate, tentativeEnd ].max
+              @endIdx = [ idx + 1, tentativeEndIdx ]
+              @end = @project.idxToDate(@endIdx)
               markAsScheduled
               break
             end
@@ -2050,12 +2103,14 @@ class TaskJuggler
           @doneDuration = ((tentativeEnd - @start) / slotDuration).to_i
           if @doneDuration >= @duration
             @end = tentativeEnd
+            @endIdx = tentativeEndIdx
             markAsScheduled
           elsif @duration * slotDuration < (@project['now'] - @start)
             # This handles the case where the bookings don't provide enough
             # @doneDuration to reach @duration, but the now date would be
             # after the @start + @duration date.
             @end = @start + @duration * slotDuration
+            @endIdx = @project.dateToIdx(@end)
             markAsScheduled
           end
         end

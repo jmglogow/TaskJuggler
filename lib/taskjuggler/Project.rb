@@ -1231,6 +1231,7 @@ class TaskJuggler
       nowIdx = dateToIdx(@attributes['now'])
       projectionMode = scenario(scIdx).get('projection')
 
+      Log.msg{ "Limits: low #{lowerLimit} up #{upperLimit} / Tasks: asap #{asapTasks} alap #{alapTasks}" }
       [ tasks_asap, tasks_alap ].zip([asapTasks, alapTasks]).each do |tasks,len|
         while !tasks.empty? and lowerLimit <= upperLimit
           # Only update the progress bar every 10 completed tasks.
@@ -1238,28 +1239,49 @@ class TaskJuggler
             percentComplete = (totalTasks - tasks_asap.length).to_f / totalTasks
             Log.progress(percentComplete)
           end
-  
+
+          # We don't have any resources for the slot => next
+          if !anyResourceAvailable?(lowerLimit) ||
+              (projectionMode && (nowIdx > lowerLimit))
+            lowerLimit += 1
+            next
+          end
+
           # Now find the task with the highest priority that can be scheduled
           # and schedule it.
           taskToRemove = nil
+          needs_resort = false
+          free_resources = availableResources?(lowerLimit)
           tasks.each do |task|
             # Task not ready? Ignore it.
             next unless task.readyForScheduling?(scIdx)
-  
-            unless task.scheduleSlot(scIdx, lowerLimit)
+
+            ongoing = true
+            unless !anyResourceAvailable?(lowerLimit) ||
+                   (projectionMode && (nowIdx > lowerLimit)) 
+              ongoing, rescnt = task.scheduleSlot(scIdx, lowerLimit)
+              accountUsedResources(lowerLimit, rescnt)
+            end
+            unless ongoing
               # The task has been completed => remove it from the todo list.
               taskToRemove = task
+            else
+              needs_resort = task.updateSchedCriticality(scIdx)
             end
-  
-            # We don't have any resources for the slot => break
-            break if !anyResourceAvailable?(lowerLimit) ||
-                     (projectionMode && (nowIdx > lowerLimit))
           end
   
-          # There should always be a task to be removed. If not, the scheduler
-          # has found a set of tasks that deadlock each other.
           if taskToRemove
             tasks.delete(taskToRemove)
+          end
+
+          tasks.sort!
+
+          Log.msg{ "Slot hr #{lowerLimit} task-len #{tasks.length} res avail #{free_resources} res free #{availableResources?(lowerLimit)}" }
+          i = 0
+          tasks.each do |task|
+            Log.msg{ "     #{task.a(scIdx, 'schedcriticalness')} #{task.fullId}" }
+            i += 1
+            break if i == 10
           end
           lowerLimit += 1
         end

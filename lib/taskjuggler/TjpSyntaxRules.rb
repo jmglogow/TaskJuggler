@@ -3973,6 +3973,10 @@ EOT
     descr('The criticalness of the task with respect to all the paths that ' +
           'it is a part of.')
 
+    singlePattern('_schedcriticalness')
+    descr('The criticalness of the task with respect to all the paths that ' +
+          'it is a part of and the duration proportional to the effort.')
+
     singlePattern('_precursors')
     descr(<<'EOT'
 A list of tasks the current task depends on. The list contains the names, the
