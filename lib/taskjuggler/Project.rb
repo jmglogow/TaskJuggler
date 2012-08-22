@@ -992,7 +992,19 @@ class TaskJuggler
     # Return true if for the date specified by the global scoreboard index
     # _sbIdx_ there is any resource that is available.
     def anyResourceAvailable?(sbIdx)
+      @resourceAvailability[sbIdx] > 0
+    end
+
+    def availableResources?(sbIdx)
       @resourceAvailability[sbIdx]
+    end
+
+    # Account used resources on the date specified by the global scoreboard
+    # index _sbIdx_.
+    def accountUsedResources(sbIdx, cnt)
+      raise "Scheduler error - used resource count must be > 0!" if cnt < 0
+      raise "Scheduler error - more resources used then available (#{@resourceAvailability[sbIdx]} <  #{cnt})!" if @resourceAvailability[sbIdx] < cnt
+      @resourceAvailability[sbIdx] -= cnt
     end
 
     # TaskJuggler keeps all times in UTC. All time values must be multiples of
@@ -1288,13 +1300,21 @@ class TaskJuggler
     def computeResourceAvailabilities(scIdx, usedResources)
       @resourceAvailability =
         Scoreboard.new(@attributes['start'], @attributes['end'],
-                       @attributes['scheduleGranularity'])
+                       @attributes['scheduleGranularity'], 0)
+
+      # A non-efficient resource can't do any work, so it can't be scheduled
+      # for a work item.
+      efficientResources = []
+      usedResources.each do |resource|
+        if resource['efficiency', scIdx] != 0.0
+          efficientResources << resource
+        end
+      end
 
       @resourceAvailability.each_index do |idx|
-        usedResources.each do |resource|
+        efficientResources.each do |resource|
           if resource.available?(scIdx, idx)
-            @resourceAvailability[idx] = true
-            break
+            @resourceAvailability[idx] += 1
           end
         end
       end

@@ -959,7 +959,7 @@ class TaskJuggler
       lowerLimit = @project.dateToIdx(@project['start'])
       upperLimit = @project.dateToIdx(@project['end'])
       delta = @forward ? 1 : -1
-      while scheduleSlot
+      while scheduleSlot()[0]
         @currentSlotIdx += delta
         if @currentSlotIdx < lowerLimit || upperLimit < @currentSlotIdx
           markAsRunaway
@@ -1740,9 +1740,10 @@ class TaskJuggler
       # either right before or after this slot. If the current slot is not
       # directly aligned, we'll wait for another call with a proper slot. The
       # function returns false if the task has been completely scheduled.
+      alloc_resources = 0
       case @durationType
       when :effortTask
-        bookResources if @doneEffort < @effort
+        alloc_resources = bookResources if @doneEffort < @effort
         if @doneEffort >= @effort
           # The specified effort has been reached. The task has been fully
           # scheduled now.
@@ -1751,10 +1752,10 @@ class TaskJuggler
           else
             propagateDate(@project.idxToDate(@currentSlotIdx), false, true)
           end
-          return false
+          return false, alloc_resources
         end
       when :lengthTask
-        bookResources
+        alloc_resources = bookResources
         # The doneLength is only increased for global working time slots.
         @doneLength += 1 if @project.isWorkingTime(@currentSlotIdx)
 
@@ -1766,12 +1767,12 @@ class TaskJuggler
           else
             propagateDate(@project.idxToDate(@currentSlotIdx), false)
           end
-          return false
+          return false, alloc_resources
         end
       when :durationTask
         # The doneDuration counts the number of scheduled slots. It is increased
         # by one with every scheduled slot.
-        bookResources
+        alloc_resources = bookResources
         @doneDuration += 1
 
         # If we have reached the specified duration or lengths, we set the end
@@ -1782,7 +1783,7 @@ class TaskJuggler
           else
             propagateDate(@project.idxToDate(@currentSlotIdx), false)
           end
-          return false
+          return false, alloc_resources
         end
       when :startEndTask
         # Task with start and end date but no duration criteria
@@ -1796,37 +1797,37 @@ class TaskJuggler
           @property.parents.each do |parent|
             parent.scheduleContainer(@scenarioIdx)
           end
-          return false
+          return false, alloc_resources
         end
       else
         raise "Unknown task duration type #{@durationType}"
       end
 
-      true
+      return true, alloc_resources
     end
 
     def bookResources
       # First check if there is any resource at all for this slot.
-      return if !@project.anyResourceAvailable?(@currentSlotIdx) ||
-                (@projectionMode && (@nowIdx > @currentSlotIdx))
+      return 0 if !@project.anyResourceAvailable?(@currentSlotIdx) ||
+                  (@projectionMode && (@nowIdx > @currentSlotIdx))
 
 
       # If the task has resource independent allocation limits we need to make
       # sure that none of them is already exceeded.
-      return unless limitsOk?(@currentSlotIdx)
+      return 0 unless limitsOk?(@currentSlotIdx)
 
       # If the task has shifts to limit the allocations, we check that we are
       # within a defined shift interval. If yes, we need to be on shift to
       # continue.
       if @shifts && @shifts.assigned?(@currentSlotIdx)
-         return if !@shifts.onShift?(@currentSlotIdx)
+         return 0 if !@shifts.onShift?(@currentSlotIdx)
       end
 
       # We first have to make sure that if there are mandatory resources
       # that these are all available for the time slot.
       takenMandatories = []
       @mandatories.each do |allocation|
-        return unless allocation.onShift?(@currentSlotIdx)
+        return 0 unless allocation.onShift?(@currentSlotIdx)
 
         # For mandatory allocations with alternatives at least one of the
         # alternatives must be available.
@@ -1854,9 +1855,10 @@ class TaskJuggler
         end
 
         # At least one mandatory resource is not available. We cannot continue.
-        return unless found
+        return 0 unless found
       end
 
+      allocated = 0
       @allocate.each do |allocation|
         next unless allocation.onShift?(@currentSlotIdx)
 
@@ -1864,10 +1866,15 @@ class TaskJuggler
         # is already a locked resource and use it.
         locked_candidate = allocation.lockedResource
         if locked_candidate
-          next if bookResource(locked_candidate) ||
-            ((@forward && 
+          if bookResource(locked_candidate)
+            allocated += 1
+            next
+          elsif ((@forward && 
                  (@currentSlotIdx < locked_candidate.getMaxSlot(@scenarioIdx))) \
-             || (@currentSlotIdx > locked_candidate.getMinSlot(@scenarioIdx)))
+              || (@currentSlotIdx > locked_candidate.getMinSlot(@scenarioIdx)))
+            next
+          end
+
           # Persistent candidate is gone for the rest of the project!
           # Warn and assign somebody else, if available!
           warning('broken_persistence',
@@ -1881,10 +1888,13 @@ class TaskJuggler
         allocation.candidates(@scenarioIdx).each do |candidate|
           if bookResource(candidate)
             allocation.lockedResource = candidate if allocation.persistent
+            allocated += 1 
             break
           end
         end
       end
+
+      allocated
     end
 
     def bookResource(resource)
