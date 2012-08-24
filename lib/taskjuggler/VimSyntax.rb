@@ -121,10 +121,11 @@ EOT
           end
           if name == 'supplement'
             @file.write(',tjp_supplement')
-          end
-          if !kw.globalScope?
-            # Every region but a property and 'project' is contained.
-            @file.write " contained"
+          else
+            if !kw.globalScope?
+              # Every region but a property and 'project' is contained.
+              @file.write " contained"
+            end
           end
           @file.puts
         end
