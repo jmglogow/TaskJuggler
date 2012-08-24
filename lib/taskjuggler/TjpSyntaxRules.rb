@@ -1076,7 +1076,7 @@ EOT
     allOrNothingListRule('exportDefinitions',
                          { 'flags' => 'Include flag definitions',
                            'project' => 'Include project header',
-                           'projecids' => 'Include project IDs',
+                           'projectids' => 'Include project IDs',
                            'tasks' => 'Include task definitions',
                            'resources' => 'Include resource definitions' })
 
