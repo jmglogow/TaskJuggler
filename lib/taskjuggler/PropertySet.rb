@@ -186,12 +186,8 @@ class TaskJuggler
     # _prop_ can either be a property ID or a reference to the PropertyTreeNode.
     #
     # TODO: This function does not take care of references to this PTN!
-    def removeProperty(prop)
-      if prop.is_a?(String)
-        property = @propertyMap[prop]
-      else
-        property = prop
-      end
+    def removeProperty(prop, stop=nil)
+      property = lookupProperty(prop)
 
       # Iterate over all properties and eliminate references to this the
       # PropertyTreeNode to be removed.
@@ -202,7 +198,11 @@ class TaskJuggler
       # Recursively remove all sub-nodes. The children list is modified during
       # the call, so we can't use an iterator here.
       until property.children.empty? do
-        removeProperty(property.children.first)
+        if !stop.nil? && property.children.first == stop
+           property.children.delete(stop)
+        else
+          removeProperty(property.children.first, stop)
+        end
       end
 
       @properties.delete(property)
@@ -211,8 +211,52 @@ class TaskJuggler
       # Remove this node from the child list of the parent node.
       property.parent.children.delete(property) if property.parent
 
-
       property
+    end
+
+    def moveProperty(prop, new_parent, replace=false)
+      property = lookupProperty(prop)
+      parent = lookupProperty(new_parent)
+      return if parent.id.start_with?(property.id)
+
+      # For the initial call, replace is true or false.
+      # During the recursion replace is set to the parent.
+      pid = nil
+      if replace.is_a?(TrueClass)
+        pid = parent.id unless parent.nil?
+        pp = parent.parent
+        removeProperty(parent, prop)
+        replace = parent
+        parent = pp
+      elsif !replace.is_a?(FalseClass)
+        # Break recursion at property
+        return if parent == replace
+      end
+
+      # A childs parent doesn't change
+      if property.parent != parent
+        property.parent.children.delete(property) unless property.parent.nil?
+        parent.children << property unless parent.nil?
+      end
+
+      # Adjust property id to new parent
+      @propertyMap.delete(property.id)
+      unless pid.nil?
+        property.set('id', pid)
+      else
+        rindex = property.id.rindex('.')
+        rindex = rindex.nil? ? 0 : rindex + 1
+        newid = property.id[rindex.. -1]
+        newid = parent.id + '.' + newid unless parent.nil?
+        property.set('id', newid  )
+      end
+
+      @propertyMap[property.id] = property
+
+      # Recursively move all children.
+      property.children.each do |child|
+        moveProperty(child, property, replace)
+      end
     end
 
     # Call this function to delete all registered properties.
@@ -307,6 +351,17 @@ class TaskJuggler
       PropertyList.new(self).to_s
     end
 
+  private
+
+    # Normalize property lookup. _prop_ can either be a property ID or a
+    # reference to the PropertyTreeNode.
+    def lookupProperty(prop)
+      if prop.is_a?(String)
+        @propertyMap[prop]
+      else
+        prop
+      end
+    end
   end
 
 end

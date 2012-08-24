@@ -839,6 +839,10 @@ class TaskJuggler
       @tasks.addProperty(task)
     end
 
+    def moveTask(task, parent, replace) # :nodoc:
+      @tasks.moveProperty(task, parent, replace)
+    end
+
     def addResource(resource) # :nodoc:
       @resources.addProperty(resource)
     end

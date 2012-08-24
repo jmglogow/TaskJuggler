@@ -5737,6 +5737,7 @@ than once. All reports must use appropriate filters by setting [[taskroot]],
 once in the report.
 EOT
        )
+    also(%w( replaceby.task steal.task ))
 
     pattern(%w( !journalEntry ))
 
@@ -6029,6 +6030,32 @@ EOT
         @property.set('sortResources', [ [ 'id', true, -1 ] ])
       end
     })
+  end
+
+  # Propagate dependencies to children
+  def moveTask(replace, current, origin)
+    # Keep original dependencies
+    deps = current['depends', @scenarioIdx]
+    precs = current['precedes', @scenarioIdx]
+
+    if replace
+      # Replace current task
+      origin.replace(current)
+      current = origin
+    else
+      # Steal origin task
+      origin.steal(current)
+    end
+
+    # Propagate dependencies to children
+    def propagateDeps(node, deps, precs)
+      node['depends', @scenarioIdx] += deps
+      node['precedes', @scenarioIdx] += precs
+      node.children.each do |child|
+        propagateDeps(child, deps, precs)
+      end
+    end
+    propagateDeps(current, deps, precs)
   end
 
   def rule_taskScenarioAttributes
@@ -6336,6 +6363,27 @@ reported.
 EOT
        )
 
+
+    pattern(%w( _replaceby !absoluteTaskId ), lambda {
+      unless @property.origin.nil?
+        error('multiple_replaces', "Task #{@property.fullId} was already replaced by #{@property.origin}",
+              @sourceFileInfo[1])
+      end
+      moveTask(true, @property, @val[1])
+    })
+    level(:experimental)
+    doc('replaceby.task', <<'EOT'
+Replaces the task with a previously defined task and its sub-tasks by
+overwriting the current task. This can be used to organize a generated task
+list.
+
+Unlike [[adopt.task]] ''''replaceby'''' removes the referred task from its
+previous location and adds the attribute ''''origin'''' with the original
+taskid. If no task id is set, it's inherited from the original task.
+EOT
+       )
+    also(%w( adopt.task steal.task ))
+
     pattern(%w( _startcredit !number ), lambda {
       @property['charge', @scenarioIdx] +=
         [ Charge.new(@val[1], :onStart, @property, @scenarioIdx) ]
@@ -6551,6 +6599,22 @@ to ASAP.
 EOT
        )
     also(%w( end period.task maxstart minstart scheduling ))
+
+    pattern(%w( _steal !absoluteTaskId ), lambda {
+      moveTask(false, @property, @val[1])
+    })
+    level(:experimental)
+    doc('steal.task', <<'EOT'
+Steals a previously defined task and its sub-tasks, effectively moving the
+stolen task and adding it as a child to the stealing task. This can be used
+to organize a generated task list.
+
+Unlike [[adopt.task]] ''''steal'''' removes the stolen task from its previous
+location and adds the attribute ''''origin'''' with the original taskid. If no
+eask id is set, it's inherited from the original task.
+EOT
+       )
+    also(%w( adopt.task replaceby.task ))
 
     pattern(%w( !warn ))
 

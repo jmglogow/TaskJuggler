@@ -32,9 +32,8 @@ class TaskJuggler
     include MessageHandler
 
     attr_reader :propertySet, :id, :subId, :parent, :project, :sequenceNo,
-                :children, :adoptees
+                :children, :adoptees, :data, :origin
     attr_accessor :name, :sourceFileInfo
-    attr_reader :data
 
     # Create a new PropertyTreeNode object. _propertySet_ is the PropertySet
     # that this PropertyTreeNode object belongs to. The PropertySet determines
@@ -48,6 +47,7 @@ class TaskJuggler
       @propertySet = propertySet
       @project = propertySet.project
       @parent = parent
+      @origin = nil
 
       # Scenario specific data
       @data = nil
@@ -654,6 +654,26 @@ class TaskJuggler
         end
       end
       res += '-' * 75 + "\n"
+    end
+
+    # Replaces _node_ with the calling node. This also moves all sub-notes.
+    def replace(node)
+      return unless @origin.nil?
+
+      @project.moveTask(self, node, true)
+      @parent = node.parent
+      @origin = self.id
+      rindex = node.id.rindex('.')
+      rindex = rindex.nil? ? 0 : rindex + 1
+      @subId = node.id[rindex.. -1]
+    end
+
+    # Sets _node_ as the new parent, effectively moving the node to _node_.
+    # This includes all sub-notes.
+    def steal(node)
+      @project.moveTask(self, node, false)
+      @parent = node
+      @project = node.project
     end
 
     # Many PropertyTreeNode functions are scenario specific. These functions are
