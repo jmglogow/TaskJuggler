@@ -61,7 +61,7 @@ class TaskJuggler
 
     # Generate the 'head' section of an HTML page.
     def generateHead(title, metaTags = {}, blob = nil)
-      @html << HEAD.new {
+      @html << (head = HEAD.new {
         e = [
           TITLE.new { title },
           META.new({ 'http-equiv' => 'Content-Type',
@@ -77,7 +77,8 @@ class TaskJuggler
         e << XMLBlob.new(blob) if blob
 
         e
-      }
+      })
+      head
     end
 
   end
