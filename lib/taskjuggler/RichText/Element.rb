@@ -118,6 +118,17 @@ class TaskJuggler
       toc
     end
 
+    # Format _ref_ in a more readable form. E.g. 'foo.bar' is
+    # returned as 'foo (bar)'. 'foo' will remain 'foo'.
+    def self.formatInternalReference(ref)
+      kwTokens = ref.split('.')
+      if kwTokens.size == 1
+        ref
+      else
+        "#{kwTokens[0]} (#{kwTokens[1]})"
+      end
+    end
+
     # Return an Array with all other snippet names that are referenced by
     # internal references in this RichTextElement.
     def internalReferences

@@ -183,16 +183,9 @@ class TaskJuggler
       end
     end
 
-    # Return the keyword name in a more readable form. E.g. 'foo.bar' is
-    # returned as 'foo (bar)'. 'foo' will remain 'foo'.
+    # Return keyword in a more readable form.
     def title
-      kwTokens = @keyword.split('.')
-      if kwTokens.size == 1
-        title = @keyword
-      else
-        title = "#{kwTokens[0]} (#{kwTokens[1]})"
-      end
-      title
+      RichTextElement.formatInternalReference(@keyword)
     end
 
     # Return the complete documentation of this keyword as formatted text

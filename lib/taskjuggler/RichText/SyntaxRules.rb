@@ -319,6 +319,10 @@ class TaskJuggler
           end
         else
           val = @val[2] || v1
+          val = val[0] if val.is_a?(Array) && (val.size == 1) \
+                                           && val[0].is_a?(String)
+          val = RichTextElement.formatInternalReference(val) \
+            if val.is_a?(String)
           el = RichTextElement.new(@richTextI, :ref,
                                    RichTextElement.new(@richTextI, :text, val))
           el.data = v1
