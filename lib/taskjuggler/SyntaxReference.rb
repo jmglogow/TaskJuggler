@@ -25,6 +25,8 @@ class TaskJuggler
   # output as well as HTML files are supported.
   class SyntaxReference
 
+    include HTMLElements
+
     attr_reader :keywords
 
     # The constructor is the most important function of this class. It creates
@@ -144,11 +146,8 @@ class TaskJuggler
     def generateHTMLnavbar(directory, keywords)
       html = HTMLDocument.new
       head = html.generateHead('TaskJuggler Syntax Reference Navigator')
-      head << XMLElement.new('base', 'target' => 'display')
-      html.html << (body = XMLElement.new('body'))
-
-      body << XMLNamedText.new('Table Of Contents', 'a', 'href' => 'toc.html')
-      body << XMLElement.new('br', {}, true)
+      head << BASE.new('target' => 'display')
+      html.html << (body = BODY.new)
 
       normalizedKeywords = {}
       keywords.each do |keyword|
@@ -160,26 +159,25 @@ class TaskJuggler
         if normalized[0, 1] != letter
           letter = normalized[0, 1]
           letters << letter
-          body << (h = XMLElement.new('h3'))
-          h << XMLNamedText.new(letter.upcase, 'a', 'name' => letter)
+          body << (h3 = H3.new)
+          h3 << A.new('name' => letter) { letter.upcase }
         end
         keyword = normalizedKeywords[normalized]
-        body << XMLNamedText.new("#{normalized}", 'a',
-                                 'href' => "#{keyword}.html")
-        body << XMLElement.new('br', {}, true)
+        body << A.new('href' => "#{keyword}.html") { normalized.to_s }
+        body << BR.new
       end
 
       html.write(directory + 'navbar.html')
 
       html = HTMLDocument.new
       head = html.generateHead('TaskJuggler Syntax Reference Navigator')
-      head << XMLElement.new('base', 'target' => 'navigator')
-      html.html << (body = XMLElement.new('body'))
+      head << BASE.new('target' => 'navigator')
+      html.html << (body = BODY.new)
 
-      body << (h3 = XMLElement.new('h3'))
+      body << (h3 = H3.new)
+      h3 << A.new('href' => 'toc.html', 'target' => 'display') { '[TOC]' }
       letters.each do |l|
-        h3 << XMLNamedText.new(l.upcase, 'a',
-                               'href' => "navbar.html##{l}")
+        h3 << A.new('href' => "navbar.html##{l}") { l.upcase }
       end
       html.write(directory + 'alphabet.html')
     end
