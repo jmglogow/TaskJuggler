@@ -20,6 +20,45 @@ require 'taskjuggler/Query'
 
 class TaskJuggler
 
+  # A RowIdGeneratorPattern is used to store alternative generetors for
+  # a table row ID.  The user can provide multiple options and the
+  # LogicalExpression is used to select the pattern for a given row.
+  class RowIdGeneratorPattern
+
+    attr_reader :setting, :logExpr
+
+    def initialize(setting, logExpr)
+      @setting = setting
+      @logExpr = logExpr
+    end
+
+  end
+
+  # The RowIdPatternList holds a list of possible test pattern for a row ID.
+  # The first entry who's LogicalExpression matches is used.
+  class RowIdPatternList
+
+    def initialize
+      @patterns = []
+    end
+
+    # Add a new pattern to the list.
+    def addPattern(pattern)
+      @patterns << pattern
+    end
+
+    # Get the RichText that matches the _property_ and _scopeProperty_.
+    def getPattern(query)
+      @patterns.each do |pattern|
+        if pattern.logExpr.eval(query)
+          return pattern.setting
+        end
+      end
+      nil
+    end
+
+  end
+
   # This is base class for all types of tabular reports. All tabular reports
   # are converted to an abstract (output independent) intermediate form first,
   # before the are turned into the requested output format.
@@ -460,6 +499,13 @@ class TaskJuggler
         query.property = task
         query.scopeProperty = scopeLine ? scopeLine.property : nil
 
+        # Get the row ID if available
+        rowid = a('rowId').getPattern(query)
+        unless rowid.nil?
+          rowid.setQuery(query)
+          rowid = rowid.to_s
+        end
+
         no += 1
         Log.activity if lineNo % 10 == 0
         lineNo += 1
@@ -468,6 +514,7 @@ class TaskJuggler
           # Generate line for each task.
           line = ReportTableLine.new(@table, task, scopeLine)
 
+          line.id = rowid unless rowid.nil?
           line.no = no unless scopeLine
           line.lineNo = lineNo
           line.subLineNo = @table.lines

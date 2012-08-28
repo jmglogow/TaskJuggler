@@ -19,7 +19,7 @@ class TaskJuggler
 
     attr_reader :table, :property, :scopeLine
     attr_accessor :height, :indentation, :fontSize, :bold,
-                  :no, :lineNo, :subLineNo
+                  :no, :lineNo, :subLineNo, :id
 
     # Create a ReportTableCell object and initialize the variables with default
     # values. _table_ is a reference to the ReportTable object this line belongs
@@ -50,6 +50,8 @@ class TaskJuggler
       @lineNo = nil
       # Counter that counts all lines.
       @subLineNo = nil
+      # ID of the line
+      @id = nil
     end
 
     # Return the last non-hidden cell of the line. Start to look for the cell at
@@ -77,7 +79,9 @@ class TaskJuggler
       style = ""
       style += "height:#{@height}px; " if @table.equiLines
       style += "font-size:#{@fontSize}px; " if @fontSize
-      tr = XMLElement.new('tr', 'class' => 'tabline', 'style' => style)
+      props = { 'class' => 'tabline', 'style' => style }
+      props['id'] = @id unless @id.nil?
+      tr = XMLElement.new('tr', props)
       @cells.each { |cell| tr << cell.to_html }
       tr
     end

@@ -418,6 +418,8 @@ class TaskJuggler
               true,  false,   false, nil ],
         [ 'rollupTask', 'Rollup Task', LogicalExpressionAttribute,
               true, false,    false, nil ],
+        [ 'rowId', 'Row Id', LogicalExpressionAttribute,
+              true,  false,   false, RowIdPatternList.new ],
         [ 'scenarios',  'Scenarios',   ScenarioListAttribute,
               true, false,    false, [ 0 ] ],
         [ 'selfcontained', 'Selfcontained', BooleanAttribute,

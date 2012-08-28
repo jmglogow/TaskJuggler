@@ -4332,6 +4332,21 @@ EOT
     pattern(%w( !rollupresource ))
     pattern(%w( !rolluptask ))
 
+    pattern(%w( _rowid !logicalExpression $STRING ), lambda {
+      @property.get('rowId').addPattern(
+        RowIdGeneratorPattern.new(newRichText(@val[2], @sourceFileInfo[2]),
+                                  @val[1]))
+    })
+    doc('rowid', <<'EOT'
+Specifies a row ID to reference a row. Usually such a text contains a query
+function. Otherwise all rows of the table will have the same fixed value. The
+logical expression specifies for which rows the ID is set. If multiple row id
+patterns are provided, the first matching one is taken for each row.
+EOT
+        )
+    arg(2, 'text',
+        'Row id specified as [[Rich_Text_Attributes|Rich Text]]')
+
     pattern(%w( _scenarios !scenarioIdList ), lambda {
       # Don't include disabled scenarios in the report
       @val[1].delete_if { |sc| !@project.scenario(sc).get('active') }
