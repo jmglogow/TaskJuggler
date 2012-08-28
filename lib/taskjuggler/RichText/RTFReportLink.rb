@@ -27,7 +27,7 @@ class TaskJuggler
       @project = project
       super('reportlink', sourceFileInfo)
       @blockFunction = false
-      @query = nil
+      @blockMode = false
     end
 
     # Not supported for this function
@@ -78,6 +78,7 @@ class TaskJuggler
         qEx = SimpleQueryExpander.new(args['label'], @query,
                                       @sourceFileInfo)
         rti = RichText.new(qEx.expand).generateIntermediateFormat
+        rti.blockMode = @blockMode
         a << rti.to_html
       else
         label = report.name

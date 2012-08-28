@@ -214,7 +214,7 @@ class TaskJuggler
     # input stream back to the position in the project file. _sfi_ is the
     # SourceFileInfo of the input string. To limit the supported set of
     # variable tokens, a subset can be provided by _tokenSet_.
-    def newRichText(text, sfi, tokenSet = nil)
+    def newRichText(text, sfi, tokenSet = nil, blockMode = true)
       rText = RichText.new(text, RTFHandlers.create(@project, sfi))
       # The RichText is processed by a separate parser. Messages will not have
       # the proper source file info unless we baseline them with the original
@@ -225,6 +225,7 @@ class TaskJuggler
       # Reset the baseline again.
       mh.baselineSFI = nil
       rti.sectionNumbers = false if rti
+      rti.blockMode = blockMode
       rti
     end
 

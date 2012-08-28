@@ -139,10 +139,10 @@ class TaskJuggler
       tooltip = @tooltip if @tooltip
       if tooltip && !tooltip.empty? && !@selfcontained
         if @showTooltipHint
-          row << (td = XMLElement.new('td'))
-          td << XMLElement.new('img', 'src' => 'icons/details.png',
-                               'class' => 'tj_table_cell_tooltip')
-          addHtmlTooltip(tooltip, td, cell)
+          labelDiv << (span = XMLElement.new('span'))
+          span << XMLElement.new('img', {'src' => 'icons/details.png',
+                                 'class' => 'tj_table_cell_tooltip'}, true)
+          addHtmlTooltip(tooltip, span, cell)
         else
           addHtmlTooltip(tooltip, cell)
         end
@@ -304,6 +304,7 @@ class TaskJuggler
         tooltip = @text if shortText != textAsString
         tl = XMLText.new(shortText)
       else
+        @text.blockMode = false if @text.is_a?(RichTextIntermediate)
         tl = (@text.is_a?(RichTextIntermediate) ? @text.to_html :
                                                   XMLText.new(@text))
       end

@@ -252,8 +252,13 @@ class TaskJuggler
       post = ''
       case @category
       when :richtext
-        pre = '<div>'
-        post = '</div>'
+        if @richText.blockMode
+          pre = '<div>'
+          post = '</div>'
+        else
+          pre = '<span>'
+          post = '</span>'
+        end
       when :title1
         pre = "<h1>#{@data[0]} "
         post = "</h1>\n\n"

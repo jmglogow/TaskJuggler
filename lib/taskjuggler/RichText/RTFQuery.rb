@@ -43,6 +43,7 @@ class TaskJuggler
       return nil unless (query = prepareQuery(args))
       if query.ok
         if (rti = query.to_rti)
+          rti.blockMode = @blockMode
           rti.to_html
         elsif (str = query.to_s)
           XMLText.new(str)

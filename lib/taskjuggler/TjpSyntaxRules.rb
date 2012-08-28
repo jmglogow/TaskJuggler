@@ -725,7 +725,7 @@ EOT
 
     pattern(%w( _celltext !logicalExpression $STRING ), lambda {
       @column.cellText.addPattern(
-        CellSettingPattern.new(newRichText(@val[2], @sourceFileInfo[2]),
+        CellSettingPattern.new(newRichText(@val[2], @sourceFileInfo[2], nil, false),
                                @val[1]))
     })
     doc('celltext.column', <<'EOT'
