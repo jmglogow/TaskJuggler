@@ -229,8 +229,9 @@ class TaskJuggler
     def cellIcon(cell)
       if @icon && !@selfcontained
         td = XMLElement.new('td', 'class' => 'tj_table_cell_icon')
-        td << XMLElement.new('img', 'src' => "icons/#{@icon}.png",
-                                    'alt' => "Icon")
+        td << XMLElement.new('img', {'src' => "icons/#{@icon}.png",
+                                     'alt' => "Icon",
+                                     'class' => 'tj_table_cell_icon'}, true)
         addHtmlTooltip(@iconTooltip, td, cell)
         return td
       end

@@ -38,7 +38,7 @@ class TaskJuggler
       # If we don't have a container yet, to put all the menus into, create one.
       html ||= XMLElement.new('div', 'class' => 'navbar_container')
 
-      html << XMLElement.new('hr', 'class' => 'navbar_topruler') if topLevel
+      html << XMLElement.new('hr', {'class' => 'navbar_topruler'}, true) if topLevel
 
       # Create a container for this (sub-)menu.
       html << (div = XMLElement.new('div', 'class' => 'navbar'))

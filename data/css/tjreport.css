@@ -130,10 +130,11 @@ p.tj_journal {
 /* The symbol is the icon to the left of the text label in a table
  * cell. */
 .tj_table_cell_icon {
-  vertical-align:top;
+  vertical-align:middle;
   text-align:right;
-  padding:1px 3px 0px 0px;
+  padding:0px 3px 0px 0px;
   width:19px;
+  margin:0px;
 }
 
 /* This is the text label of a cell. */

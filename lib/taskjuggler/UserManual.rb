@@ -86,8 +86,8 @@ class TaskJuggler
     # Callback function used by the RichTextDocument and KeywordDocumentation
     # classes to generate the HTML style sheet for the manual pages.
     def generateStyleSheet
-      XMLElement.new('link', 'rel' => 'stylesheet', 'type' => 'text/css',
-                             'href' => 'css/tjmanual.css')
+      XMLElement.new('link', {'rel' => 'stylesheet', 'type' => 'text/css',
+                             'href' => 'css/tjmanual.css'}, true)
     end
 
     # Callback function used by the RichTextDocument class to generate the cover
