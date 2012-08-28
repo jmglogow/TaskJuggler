@@ -183,27 +183,38 @@ class TaskJuggler
                                  'keywords' =>
                                    'taskjuggler, project, management' },
                                a('rawHtmlHead'))
+
+      cssInfo = [ 
+        [ 'tjreport', 'all' ], 
+        [ 'tjreport_print', 'print' ]
+      ]
       if a('selfcontained')
         auxSrcDir = AppConfig.dataDirs('data/css')[0]
-        cssFileName = (auxSrcDir ? auxSrcDir + '/tjreport.css' : '')
-        # Raise an error if we haven't found the data directory
-        if auxSrcDir.nil? || !File.exists?(cssFileName)
-          dataDirError(cssFileName, AppConfig.dataSearchDirs('data/css'))
+
+        cssInfo.each do |fname,media|
+          cssFileName = (auxSrcDir ? auxSrcDir + "/#{fname}.css" : '')
+          # Raise an error if we haven't found the data directory
+          if auxSrcDir.nil? || !File.exists?(cssFileName)
+            dataDirError(cssFileName, AppConfig.dataSearchDirs('data/css'))
+          end
+          cssFile = IO.read(cssFileName)
+          if cssFile.empty?
+            error('css_file_error',
+                  "Cannot read '#{cssFileName}'. Make sure the file is not " +
+                  "empty and you have read access permission.")
+          end
+          head << XMLElement.new('meta', 'http-equiv' => 'Content-Style-Type',
+                                 'content' => 'text/css; charset=utf-8')
+          head << (style = XMLElement.new('style', 'type' => 'text/css'))
+          style << XMLBlob.new("\n@media #{media} {\n" + cssFile + "}\n")
         end
-        cssFile = IO.read(cssFileName)
-        if cssFile.empty?
-          error('css_file_error',
-                "Cannot read '#{cssFileName}'. Make sure the file is not " +
-                "empty and you have read access permission.")
-        end
-        head << XMLElement.new('meta', 'http-equiv' => 'Content-Style-Type',
-                               'content' => 'text/css; charset=utf-8')
-        head << (style = XMLElement.new('style', 'type' => 'text/css'))
-        style << XMLBlob.new("\n" + cssFile)
       else
-        head << XMLElement.new('link', 'rel' => 'stylesheet',
-                               'type' => 'text/css',
-                               'href' => 'css/tjreport.css')
+        cssInfo.each do |fname,media|
+          head << XMLElement.new('link', {'rel' => 'stylesheet',
+                                 'type' => 'text/css',
+                                 'href' => "css/#{fname}.css",
+                                 'media' => "#{media}"}, true)
+        end
       end
       html.html <<
         XMLComment.new("Dynamic Report ID: " +

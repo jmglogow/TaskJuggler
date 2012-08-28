@@ -1,0 +1,35 @@
+
+.tj_page {
+  margin: 0;
+}
+
+div.tj_page > div {
+  display: none;
+}
+
+div.tj_page > div.copyright {
+  display: block;
+}
+
+.tj_table_frame {
+  margin: 0;
+}
+
+.tabhead {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+.tj_table_header_cell {
+  color: #000000;
+}
+
+.taskcell1 {
+  background-color: #ebf2ff;
+  white-space: wrap;
+}
+
+.taskcell2 {
+  background-color: #ffffff;
+  white-space: wrap;
+}
