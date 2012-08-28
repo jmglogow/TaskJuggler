@@ -183,23 +183,43 @@ the string must be escaped with backslashes. This feature enables
 reports with content that is customized based on where they have been
 referenced from. It requires the reports to be dynamically generated
 and is only available when used with the ''''tj3d'''' web server.
+It supports a simplified cell query format 
+''''<nowiki><-CELL-></nowiki>''''.
 The ''''tj3'''' application will ignore the attributes setting.
+
+* ''''label'''': Optional label for the generated link. It defaults to
+the reports name.  The same quoting and cell reference rules as for 
+''''attributes'''' apply.
+
+* ''''rowid'''': Optional attribute to generate a link to a page
+anchor. The quoting and cell reference rules from ''''attributes''''
+are applied. It can just be used in ''static'' mode.
 
  taskreport "All" {
    formats html
-   columns name { 
-     celltext 1 -8<-
-       <-query attribute="name"-> <-reportlink id="taskRep"
-                    attributes="hidetask plan.id != \"<-id->\""->
-       ->8-
-   }, start, end
+   columns name {
+       title "Dynamic"
+       celltext 1 -8<-
+         <-query attribute="name"-> <-reportlink id="taskRep"
+                      attributes="hidetask plan.id != \"<-id->\""->
+         ->8-
+     },
+     name {
+       title "Static"
+       celltext 1 -8<-
+         <-reportlink id="taskRep" label="<-name->" rowid="<-bsi->"->
+         ->8-
+     }, start, end
  }
  
  taskreport taskRep "Task" {
    formats html
+   rowid 1 "<-query attribute='bsi'->"
  } 
 
-The report link generator inserts a link to the referenced report.
+The report link generator inserts a link to the referenced report. It
+has two modes, ''static'' and ''dynamic'', based on the availability
+of the ''''attributes'''' parameter.
 ----
 '''Inline Generator''' ''''query''''
 

@@ -15,6 +15,7 @@ require 'taskjuggler/RichText/RTFWithQuerySupport'
 require 'taskjuggler/XMLElement'
 require 'taskjuggler/URLParameter'
 require 'taskjuggler/SimpleQueryExpander'
+require 'taskjuggler/LogicalExpression'
 
 class TaskJuggler
 
@@ -36,6 +37,10 @@ class TaskJuggler
 
     # Return a HTML tree for the report.
     def to_html(args)
+      unless @query
+        raise "No Query has been registered for this RichText yet!"
+      end
+
       if args.nil? || (id = args['id']).nil?
         error('rtp_report_id',
               "Argument 'id' missing to specify the report to be used.")
@@ -60,9 +65,24 @@ class TaskJuggler
       else
         # The report name just gets a '.html' extension.
         url = report.name + ".html"
+
+        if args['rowid']
+          qEx = SimpleQueryExpander.new(args['rowid'], @query,
+                                        @sourceFileInfo)
+
+          url += "#" + qEx.expand
+        end
       end
       a = XMLElement.new('a', 'href'=> url)
-      a << XMLText.new(report.name)
+      if args['label']
+        qEx = SimpleQueryExpander.new(args['label'], @query,
+                                      @sourceFileInfo)
+        rti = RichText.new(qEx.expand).generateIntermediateFormat
+        a << rti.to_html
+      else
+        label = report.name
+        a << XMLText.new(label)
+      end
       a
     end
 
