@@ -887,6 +887,18 @@ Rich Text]].
 EOT
        )
 
+    pattern(%w( _valign !logicalExpression !vAlignment ), lambda {
+      @column.vAlign.addPattern(
+        CellSettingPattern.new(@val[2], @val[1]))
+    })
+    doc('valign.column', <<'EOT'
+Specifies the vertical alignment of the cell content. The logical expression
+specifies for which cells the alignment setting should be used. If multiple
+''''valign'''' patterns are provided for a column, the first matching one is
+used for each cell.
+EOT
+       )
+
     pattern(%w( _width !number ), lambda {
       @column.width = @val[1]
     })
@@ -7312,6 +7324,23 @@ EOT
       end
       @val[0]
     })
+  end
+
+  def rule_vAlignment
+    pattern(%w( _middle ), lambda {
+      :middle
+    })
+    doc('valign.middle', 'Middle the cell content')
+
+    pattern(%w( _top ), lambda {
+      :top
+    })
+    doc('valign.top', 'Top align the cell content')
+
+    pattern(%w( _bottom ), lambda {
+      :bottom
+    })
+    doc('valign.bottom', 'Bottom align the cell content')
   end
 
   def rule_valIntervalOrDate

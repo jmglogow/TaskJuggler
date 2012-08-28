@@ -21,7 +21,7 @@ class TaskJuggler
   class ReportTableCell
 
     attr_reader :line
-    attr_accessor :data, :category, :hidden, :alignment, :padding,
+    attr_accessor :data, :category, :hidden, :vAlign, :hAlign, :padding,
                   :text, :tooltip, :showTooltipHint,
                   :iconTooltip, :selfcontained,
                   :cellColor, :indent, :icon, :fontSize, :fontColor,
@@ -57,7 +57,9 @@ class TaskJuggler
       # columns)
       @hidden = false
       # How to horizontally align the cell
-      @alignment = :center
+      @hAlign = :center
+      # How to vertically align the cell
+      @vAlign = :middle
       # Horizontal padding between frame and cell content
       @padding = 3
       # Whether or not to indent the cell. If not nil, it is a Fixnum
@@ -94,7 +96,8 @@ class TaskJuggler
     def ==(c)
       @text == c.text &&
       @tooltip == c.tooltip &&
-      @alignment == c.alignment &&
+      @hAlign == c.hAlign &&
+      @vAlign == c.vAlign &&
       @padding == c.padding &&
       @indent == c.indent &&
       @cellColor == c.cellColor &&
@@ -157,7 +160,7 @@ class TaskJuggler
     def to_csv(csv, columnIdx, lineIdx)
       # We only support left indentation in CSV files as the spaces for right
       # indentation will be disregarded by most applications.
-      indent = @indent && @alignment == :left ? '  ' * @indent : ''
+      indent = @indent && @hAlign == :left ? '  ' * @indent : ''
       columns = 1
       if @special
         # This is for nested tables. They will be inserted as whole columns
@@ -200,10 +203,10 @@ class TaskJuggler
       # tree nesting structure. The indentation is achieved with padding cells
       # and needs to be applied to the proper side depending on the alignment.
       @leftIndent = @rightIndent = 0
-      if @indent && @alignment != :center
-        if @alignment == :left
+      if @indent && @hAlign != :center
+        if @hAlign == :left
           @leftIndent = @indent * 8
-        elsif @alignment == :right
+        elsif @hAlign == :right
           @rightIndent = (@line.table.maxIndent - @indent) * 8
         end
       end
@@ -211,9 +214,13 @@ class TaskJuggler
 
     # Determine cell style
     def cellStyle
-      style = "text-align:#{@alignment.to_s}; "
+      style  = ""
+      style += "text-align:#{@hAlign.to_s}; "
+      style += "vertical-align:#{@vAlign.to_s}; " if (@vAlign != :middle)
       if @line && @line.table.equiLines
         style += "height:#{@line.height - 7}px; "
+      else
+        style += "height:100%; "
       end
 
       style

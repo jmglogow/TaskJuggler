@@ -20,7 +20,8 @@ class TaskJuggler
   # and right.
   class TextReport < ReportBase
 
-    attr_accessor :header, :left, :center, :right, :footer
+    attr_accessor :header, :left, :center, :right, :bottom, :middle, :top,
+                  :footer
 
     def initialize(report)
       super

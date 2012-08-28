@@ -28,61 +28,61 @@ class TaskJuggler
     attr_reader :legend
 
     @@propertiesById = {
-      # ID                   Header                   Indent  Align   Scen Spec.
-      'activetasks'       => [ 'Active Tasks',         true,   :right, true ],
-      'annualleave'       => [ 'Annual Leave',         true,   :right, true ],
-      'annualleavebalance'=> [ 'Annual Leave Balance', false,  :right, true ],
-      'alert'             => [ 'Alert',                true,   :left,  false ],
-      'alertmessages'     => [ 'Alert Messages',       false,  :left,  false ],
-      'alertsummaries'    => [ 'Alert Summaries',      false,  :left,  false ],
-      'alerttrend'        => [ 'Alert Trend',          false,  :left,  false ],
-      'balance'           => [ 'Balance',              true,   :right, true ],
-      'bsi'               => [ 'BSI',                  false,  :left,  false ],
-      'closedtasks'       => [ 'Closed Tasks',         true,   :right, true ],
-      'competitorcount'   => [ 'Competitor count',     true,   :right, true ],
-      'competitors'       => [ 'Competitors',          true,   :left,  true ],
-      'complete'          => [ 'Completion',           false,  :right, true ],
-      'cost'              => [ 'Cost',                 true,   :right, true ],
-      'duration'          => [ 'Duration',             true,   :right, true ],
-      'effort'            => [ 'Effort',               true,   :right, true ],
-      'effortdone'        => [ 'Effort Done',          true,   :right, true ],
-      'effortleft'        => [ 'Effort Left',          true,   :right, true ],
-      'freetime'          => [ 'Free Time',            true,   :right, true ],
-      'freework'          => [ 'Free Work',            true,   :right, true ],
-      'followers'         => [ 'Followers',            false,  :left,  true ],
-      'fte'               => [ 'FTE',                  true,   :right, true ],
-      'headcount'         => [ 'Headcount',            true,   :right, true ],
-      'id'                => [ 'Id',                   false,  :left,  false ],
-      'inputs'            => [ 'Inputs',               false,  :left,  true ],
-      'journal'           => [ 'Journal',              false,  :left,  false ],
-      'journal_sub'       => [ 'Journal',              false,  :left,  false ],
-      'journalmessages'   => [ 'Journal Messages',     false,  :left,  false ],
-      'journalsummaries'  => [ 'Journal Summaries',    false,  :left,  false ],
-      'line'              => [ 'Line No.',             false,  :right, false ],
-      'name'              => [ 'Name',                 true,   :left,  false ],
-      'no'                => [ 'No.',                  false,  :right, false ],
-      'opentasks'         => [ 'Open Tasks',           true,   :right, true ],
-      'precursors'        => [ 'Precursors',           false,  :left,  true ],
-      'rate'              => [ 'Rate',                 true,   :right, true ],
-      'resources'         => [ 'Resources',            false,  :left,  true ],
-      'responsible'       => [ 'Responsible',          false,  :left,  true ],
-      'revenue'           => [ 'Revenue',              true,   :right, true ],
-      'scenario'          => [ 'Scenario',             false,  :left,  true ],
-      'scheduling'        => [ 'Scheduling Mode',      true,   :left,  true ],
-      'sickleave'         => [ 'Sick Leave',           true,   :right, true ],
-      'specialleave'      => [ 'Special Leave',        true,   :right, true ],
-      'status'            => [ 'Status',               false,  :left,  true ],
-      'targets'           => [ 'Targets',              false,  :left,  true ],
-      'unpaidleave'       => [ 'Unpaid Leave',         true,   :right, true ]
+      # ID                   Header                  Indent  hAlign  Scen Spec. vAlign
+      'activetasks'       => [ 'Active Tasks',         true,  :right, true,  :middle ],
+      'annualleave'       => [ 'Annual Leave',         true,  :right, true,  :middle ],
+      'annualleavebalance'=> [ 'Annual Leave Balance', false, :right, true,  :middle ],
+      'alert'             => [ 'Alert',                true,  :left,  false, :middle ],
+      'alertmessages'     => [ 'Alert Messages',       false, :left,  false, :middle ],
+      'alertsummaries'    => [ 'Alert Summaries',      false, :left,  false, :middle ],
+      'alerttrend'        => [ 'Alert Trend',          false, :left,  false, :middle ],
+      'balance'           => [ 'Balance',              true,  :right, true,  :middle ],
+      'bsi'               => [ 'BSI',                  false, :left,  false, :middle ],
+      'closedtasks'       => [ 'Closed Tasks',         true,  :right, true,  :middle ],
+      'competitorcount'   => [ 'Competitor count',     true,  :right, true,  :middle ],
+      'competitors'       => [ 'Competitors',          true,  :left,  true,  :middle ],
+      'complete'          => [ 'Completion',           false, :right, true,  :middle ],
+      'cost'              => [ 'Cost',                 true,  :right, true,  :middle ],
+      'duration'          => [ 'Duration',             true,  :right, true,  :middle ],
+      'effort'            => [ 'Effort',               true,  :right, true,  :middle ],
+      'effortdone'        => [ 'Effort Done',          true,  :right, true,  :middle ],
+      'effortleft'        => [ 'Effort Left',          true,  :right, true,  :middle ],
+      'freetime'          => [ 'Free Time',            true,  :right, true,  :middle ],
+      'freework'          => [ 'Free Work',            true,  :right, true,  :middle ],
+      'followers'         => [ 'Followers',            false, :left,  true,  :middle ],
+      'fte'               => [ 'FTE',                  true,  :right, true,  :middle ],
+      'headcount'         => [ 'Headcount',            true,  :right, true,  :middle ],
+      'id'                => [ 'Id',                   false, :left,  false, :middle ],
+      'inputs'            => [ 'Inputs',               false, :left,  true,  :middle ],
+      'journal'           => [ 'Journal',              false, :left,  false, :middle ],
+      'journal_sub'       => [ 'Journal',              false, :left,  false, :middle ],
+      'journalmessages'   => [ 'Journal Messages',     false, :left,  false, :middle ],
+      'journalsummaries'  => [ 'Journal Summaries',    false, :left,  false, :middle ],
+      'line'              => [ 'Line No.',             false, :right, false, :middle ],
+      'name'              => [ 'Name',                 true,  :left,  false, :middle ],
+      'no'                => [ 'No.',                  false, :right, false, :middle ],
+      'opentasks'         => [ 'Open Tasks',           true,  :right, true,  :middle ],
+      'precursors'        => [ 'Precursors',           false, :left,  true,  :middle ],
+      'rate'              => [ 'Rate',                 true,  :right, true,  :middle ],
+      'resources'         => [ 'Resources',            false, :left,  true,  :middle ],
+      'responsible'       => [ 'Responsible',          false, :left,  true,  :middle ],
+      'revenue'           => [ 'Revenue',              true,  :right, true,  :middle ],
+      'scenario'          => [ 'Scenario',             false, :left,  true,  :middle ],
+      'scheduling'        => [ 'Scheduling Mode',      true,  :left,  true,  :middle ],
+      'sickleave'         => [ 'Sick Leave',           true,  :right, true,  :middle ],
+      'specialleave'      => [ 'Special Leave',        true,  :right, true,  :middle ],
+      'status'            => [ 'Status',               false, :left,  true,  :middle ],
+      'targets'           => [ 'Targets',              false, :left,  true,  :middle ],
+      'unpaidleave'       => [ 'Unpaid Leave',         true,  :right, true,  :middle ]
     }
     @@propertiesByType = {
-      # Type                     Indent  Align
-      DateAttribute         => [ false,  :left ],
-      FixnumAttribute       => [ false,  :right ],
-      FloatAttribute        => [ false,  :right ],
-      ResourceListAttribute => [ false, :left ],
-      RichTextAttribute     => [ false,  :left ],
-      StringAttribute       => [ false,  :left ]
+      # Type                     Indent  hAlign  vAlign
+      DateAttribute         => [ false, :left,  :middle ],
+      FixnumAttribute       => [ false, :right, :middle ],
+      FloatAttribute        => [ false, :right, :middle ],
+      ResourceListAttribute => [ false, :left,  :middle ],
+      RichTextAttribute     => [ false, :left,  :middle ],
+      StringAttribute       => [ false, :left,  :middle ]
     }
     # Generate a new TableReport object.
     def initialize(report)
@@ -172,15 +172,27 @@ class TaskJuggler
       end
     end
 
-    # Return the alignment of the column based on the _colId_ or the
+    # Return the horizontal alignment of the column based on the _colId_ or the
     # _attributeType_.
-    def alignment(colId, attributeType)
+    def hAlign(colId, attributeType)
       if @@propertiesById.has_key?(colId)
         return @@propertiesById[colId][2]
       elsif @@propertiesByType.has_key?(attributeType)
         return @@propertiesByType[attributeType][1]
       else
         :center
+      end
+    end
+
+    # Return the vertical alignment of the column based on the _colId_ or the
+    # _attributeType_.
+    def vAlign(colId, attributeType)
+      if @@propertiesById.has_key?(colId)
+        return @@propertiesById[colId][4]
+      elsif @@propertiesByType.has_key?(attributeType)
+        return @@propertiesByType[attributeType][2]
+      else
+        :middle
       end
     end
 
@@ -1077,7 +1089,8 @@ class TaskJuggler
       end
 
       # Determine the cell alignment
-      cell.alignment = alignment(columnDef.id, attributeType)
+      cell.hAlign = hAlign(columnDef.id, attributeType)
+      cell.vAlign = vAlign(columnDef.id, attributeType)
 
       # Set background color
       if line.property.is_a?(Task)
@@ -1105,10 +1118,15 @@ class TaskJuggler
       fontColor = columnDef.fontColor.getPattern(query)
       cell.fontColor = fontColor if fontColor
 
-      # Replace the default cell alignment if the user has requested a custom
-      # alignment.
+      # Replace the default horizontal cell alignment if the user has requested
+      # a custom alignment.
       hAlign = columnDef.hAlign.getPattern(query)
-      cell.alignment = hAlign if hAlign
+      cell.hAlign = hAlign if hAlign
+
+      # Replace the default vertical cell alignment if the user has requested a
+      # custom alignment.
+      vAlign = columnDef.vAlign.getPattern(query)
+      cell.vAlign = vAlign if vAlign
 
       # Register the custom tooltip if the user has requested one.
       cdTooltip = columnDef.tooltip.getPattern(query)

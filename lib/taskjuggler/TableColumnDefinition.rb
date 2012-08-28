@@ -58,7 +58,8 @@ class TaskJuggler
   # The column is uniquely identified by an ID.
   class TableColumnDefinition
 
-    attr_reader :id, :cellText, :tooltip, :hAlign, :cellColor, :fontColor
+    attr_reader :id, :cellText, :tooltip, :hAlign, :cellColor, :fontColor,
+                :vAlign
     attr_accessor :title, :start, :end, :scale, :listItem, :listType,
                   :width, :content, :column, :timeformat1, :timeformat2
 
@@ -79,6 +80,8 @@ class TaskJuggler
       @content = 'load'
       # Horizontal alignment of the cell content.
       @hAlign = CellSettingPatternList.new
+      # Vertical alignment of the cell content.
+      @vAlign = CellSettingPatternList.new
       # An alternative content for the tooltip message. It should be a
       # RichText object.
       @tooltip = CellSettingPatternList.new
