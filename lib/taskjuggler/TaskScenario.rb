@@ -147,6 +147,7 @@ class TaskJuggler
     # dependency originates from the end of the task or not.
     def Xref
       @depends.each do |dependency|
+        Log.msg { "Dependency #{@property.fullId} => #{dependency.taskId}" }
         depTask = checkDependency(dependency, 'depends')
         @startpreds.push([ depTask, dependency.onEnd ])
         depTask[dependency.onEnd ? 'endsuccs' : 'startsuccs', @scenarioIdx].

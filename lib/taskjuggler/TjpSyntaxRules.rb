@@ -1919,6 +1919,7 @@ EOT
 
     pattern(%w( _taskprefix !taskId ), lambda {
       @taskprefix = @val[1].fullId
+      Log.msg { "Set taskprefix = #{@taskprefix}" }
     })
     doc('taskprefix', <<'EOT'
 This attribute can be used to insert the tasks of the included file as
