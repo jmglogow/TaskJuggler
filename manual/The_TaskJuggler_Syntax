@@ -64,6 +64,13 @@ An identifier is composed of the letters ''''a'''' to ''''z'''',
 ''''9''''. There are no limits for the number of characters, but it
 may not begin with a digit.
 
+==== RELATIVE_ID ====
+
+A relative identifier always starts with one or more exclamation marks and is
+followed by multiple IDs. Each exclamation mark lifts the scope where the ID
+is looked for to the enclosing group. The ID may contain some of the parent
+IDs separated by dots, e. g. ''''!!plan.doc''''.
+
 ==== INTEGER ====
 
 An integer is any natural number, e. g. ''''0'''', ''''1'''',
