@@ -168,7 +168,7 @@ class TaskJuggler
 
     def quotes(type, match)
       self.mode = :inline
-      types = [ nil, nil, :ITALIC, :BOLD , :CODE, :BOLDITALIC ]
+      types = [ nil, nil, :ITALIC, :BOLD, :CODE, :BOLDITALIC ]
       [ types[match.length], match ]
     end
 

@@ -235,7 +235,6 @@ EOT
                             )
       end
 
-
       # Make sure we have some margins around the report.
       body << (frame = XMLElement.new('div', 'class' => 'tj_page'))
 

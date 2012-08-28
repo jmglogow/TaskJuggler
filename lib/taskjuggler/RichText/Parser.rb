@@ -55,7 +55,7 @@ class TaskJuggler
       @numberListCounter = [ 0, 0, 0, 0 ]
     end
 
-    def reuse(rti, sectionCounter = [ 0, 0, 0, 0],
+    def reuse(rti, sectionCounter = [ 0, 0, 0, 0 ],
               tokenSet = nil)
       @blockedVariables = {}
       @stack = nil

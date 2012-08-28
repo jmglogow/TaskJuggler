@@ -341,7 +341,7 @@ class TaskJuggler::TextParser
       begin
         @fileStack << [ (@cf = FileStreamHandle.new(includeFileName, @log,
                                                     self)), nil, block ]
-        @log.msg { "Parsing file #{includeFileName}" }
+        @log.msg { "Parsing include #{includeFileName}" }
       rescue StandardError
         error('bad_include', "Cannot open include file #{includeFileName}", sfi)
       end

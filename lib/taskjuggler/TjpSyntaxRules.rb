@@ -751,7 +751,7 @@ provided for a column, the first matching one is taken for each cell.
 EOT
         )
     arg(2, 'text',
-        'Alterntive cell text specified as [[Rich_Text_Attributes|Rich Text]]')
+        'Alternative cell text specified as [[Rich_Text_Attributes|Rich Text]]')
 
     pattern(%w( _cellcolor !logicalExpression !color ), lambda {
       @column.cellColor.addPattern(
@@ -6470,9 +6470,9 @@ commas. IDs must be either global or relative. A relative ID starts with a
 number of '!'. Each '!' moves the scope to the parent task. Global IDs do not
 contain '!', but have IDs separated by dots.
 
-By using the 'precedes' attribute, the scheduling policy is automatically set
-to alap. If both depends and precedes are used within a task, the last policy
-counts.
+By using the ''''precedes'''' attribute, the scheduling policy is automatically
+set to alap. If both depends and precedes are used within a task, the last
+policy counts.
 EOT
        )
 

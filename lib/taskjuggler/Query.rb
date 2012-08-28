@@ -192,7 +192,7 @@ class TaskJuggler
             # non-scenario-specific values. We need to check if the attribute
             # is really scenario specific or not because
             # PropertyTreeNode::getAttribute can only handle an index for
-            # scenario-specific attributs.
+            # scenario-specific attributes.
             aType = @property.attributeDefinition(@attributeId)
             raise ArgumentError unless aType
             scIdx = aType.scenarioSpecific ? @scenarioIdx : nil
