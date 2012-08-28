@@ -2,6 +2,7 @@ benchmarks/css
 benchmarks/icons
 benchmarks/scripts
 CHANGELOG
+data/tjp.vim
 doc
 lib/css
 lib/*.html
@@ -15,6 +16,7 @@ pkg
 Rakefile
 rcov
 refman
+test/TestSuite/Export-Reports/refs/*.tjp
 test/TestSuite/HTML-Reports/css
 test/TestSuite/HTML-Reports/*.html
 test/TestSuite/HTML-Reports/icons
