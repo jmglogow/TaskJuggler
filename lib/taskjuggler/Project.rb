@@ -251,6 +251,8 @@ class TaskJuggler
               false, false,   true,  [] ],
         [ 'chargeset', 'Charge Sets',  ChargeSetListAttribute,
               true,  false,   true,  [] ],
+        [ 'childcnt', 'Real child tasks', FixnumAttribute,
+              false, false,   true,  0 ],
         [ 'complete',  'Completion',   FloatAttribute,
               false, false,   true,  nil ],
         [ 'competitors', 'Competitors', TaskListAttribute,

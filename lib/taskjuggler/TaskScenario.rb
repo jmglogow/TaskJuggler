@@ -26,8 +26,8 @@ class TaskJuggler
       # Attributed are only really created when they are accessed the first
       # time. So make sure some needed attributes really exist so we don't
       # have to check for existance each time we access them.
-      %w( allocate assignedresources booking charge chargeset complete
-          competitors criticalness depends duration
+      %w( allocate assignedresources booking charge chargeset childcnt
+          complete competitors criticalness depends duration
           effort end forward gauge length
           maxend maxstart minend minstart milestone pathcriticalness
           precedes priority scheduled shifts start status ).each do |attr|
@@ -392,6 +392,12 @@ class TaskJuggler
             pTask['assignedresources', @scenarioIdx] << resource
           end
         end
+      end
+
+      unless @property.parent.nil?
+        @property.parent['childcnt', @scenarioIdx] += 1 \
+          if !@property['milestone', @scenarioIdx] && !@property.container?
+        @property.parent['childcnt', @scenarioIdx] += @property['childcnt', @scenarioIdx]
       end
 
       # These lists are no longer needed, so let's save some memory. Set it to

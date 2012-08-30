@@ -77,6 +77,7 @@ class TaskJuggler
       'alerttrend'        => [ 'Alert Trend',          false, :left,  false, :middle ],
       'balance'           => [ 'Balance',              true,  :right, true,  :middle ],
       'bsi'               => [ 'BSI',                  false, :left,  false, :middle ],
+      'childcnt'          => [ 'Child count',          true,  :right, false, :middle ],
       'closedtasks'       => [ 'Closed Tasks',         true,  :right, true,  :middle ],
       'competitorcount'   => [ 'Competitor count',     true,  :right, true,  :middle ],
       'competitors'       => [ 'Competitors',          true,  :left,  true,  :middle ],

@@ -3773,6 +3773,12 @@ column.
 EOT
          )
 
+    singlePattern('_childcnt')
+    descr(<<'EOT'
+Number of real child tasks, e.g. no milestones or containers.
+EOT
+         )
+
     singlePattern('_closedtasks')
     descr(<<'EOT'
 The number of sub-tasks (including the current task) that have been closed
