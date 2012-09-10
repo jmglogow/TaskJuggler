@@ -634,9 +634,6 @@ class TaskJuggler
       end
 
       @scenarios.each do |sc|
-        # Skip disabled scenarios
-        next unless sc.get('active')
-
         scIdx = scenarioIdx(sc)
 
         # All user provided values are set now. The next step is to
@@ -646,9 +643,13 @@ class TaskJuggler
         AttributeBase.setMode(1)
         prepareScenario(scIdx)
 
+        # Don't compute any values for disabled scenarios.
+        next unless sc.get('active');
+
         # Now change to mode 2 so all values that are modified are marked
         # as computed.
         AttributeBase.setMode(2)
+
         # Schedule the scenario.
         scheduleScenario(scIdx)
 
