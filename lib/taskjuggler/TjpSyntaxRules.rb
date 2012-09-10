@@ -1677,6 +1677,16 @@ EOT
     arg(2, 'Task ID', 'The ID of a defined task')
     arg(4, 'Scenario ID', 'A scenario ID')
 
+    pattern(%w( _isinherited _( $ID _) ))
+    doc('isinherited', <<'EOT'
+True, if the property value was inherited from a scenario or parent. This is
+also true, if the values was changed by the user. See [isprovided] to check
+for user provided values.
+EOT
+       )
+    arg(2, 'Property ID', 'The ID of a property.')
+    also(%w( ismodified isprovided ))
+
     pattern(['_isleaf', '_(', '_)' ])
     doc('isleaf', 'The result is true if the property is not a container.')
 
@@ -1687,6 +1697,14 @@ EOT
        )
     arg(2, 'Scenario ID', 'A scenario ID')
 
+    pattern(%w( _ismodified _( $ID _) ))
+    doc('ismodified', <<'EOT'
+Not really sure, when it is set. The function just applies to properties.
+EOT
+       )
+    arg(2, 'Property ID', 'The ID of a property.')
+    also(%w( isinherited isprovided ))
+
     pattern(%w( _isongoing _( $ID _) ))
     doc('isongoing', <<'EOT'
 Will evaluate to true for tasks that overlap with the report period in given
@@ -1694,6 +1712,15 @@ scenario.
 EOT
        )
     arg(2, 'ID', 'A scenario ID')
+
+    pattern(%w( _isprovided _( $ID _) ))
+    doc('isprovided', <<'EOT'
+True, if the property value was provided by the user. The function just
+applies to properties.
+EOT
+       )
+    arg(2, 'Property ID', 'The ID of a property.')
+    also(%w( isinherited ismodified ))
 
     pattern(['_isresource', '_(', '_)' ])
     doc('isresource', 'The result is true if the property is a resource.')

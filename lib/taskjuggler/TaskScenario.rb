@@ -1585,6 +1585,8 @@ class TaskJuggler
       resource = resource.ptn if resource
       return 0.0 if @milestone || startIdx >= endIdx ||
                     (resource && !@assignedresources.include?(resource))
+      return (@effort / @project['dailyworkinghours']).round(4) \
+        if ! @project.scenario(@scenarioIdx).get('active') && @property.leaf?
 
       @dCache.cached(self, :TaskScenarioEffectiveWork, startIdx, endIdx,
                      resource) do
@@ -1605,7 +1607,7 @@ class TaskJuggler
             end
           end
         end
-        workLoad
+        workLoad.round(4)
       end
     end
 

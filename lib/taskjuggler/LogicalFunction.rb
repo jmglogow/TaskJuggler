@@ -30,9 +30,12 @@ class TaskJuggler
         'isdependencyof' => 3,
         'isdutyof' => 2,
         'isfeatureof' => 2,
+        'isinherited' => 1,
         'isleaf' => 0,
         'ismilestone' => 1,
+        'ismodified' => 1,
         'isongoing' => 1,
+        'isprovided' => 1,
         'isresource' => 0,
         'isresponsibilityof' => 2,
         'istask' => 0,
@@ -169,6 +172,14 @@ class TaskJuggler
       property.isFeatureOf(scenarioIdx, task)
     end
 
+    def isinherited(expr, args)
+      item = properties(expr)[0]
+      return false unless item
+      scenario, property = args[0].split('.', 2)
+      return false if (scenarioIdx = item.project.scenarioIdx(scenario)).nil?
+      item.inherited(property, scenarioIdx)
+    end
+
     def isleaf(expr, args)
       property = properties(expr)[0]
       return false unless property
@@ -182,6 +193,14 @@ class TaskJuggler
       return false if (scenarioIdx = property.project.scenarioIdx(args[0])).nil?
 
       property.is_a?(Task) && property['milestone', scenarioIdx]
+    end
+
+    def ismodified(expr, args)
+      item = properties(expr)[0]
+      return false unless item
+      scenario, property = args[0].split('.', 2)
+      return false if (scenarioIdx = item.project.scenarioIdx(scenario)).nil?
+      item.modified?(property, scenarioIdx)
     end
 
     def isongoing(expr, args)
@@ -204,6 +223,14 @@ class TaskJuggler
       iv2 = TimeInterval.new(tStart, tEnd)
 
       return iv1.overlaps?(iv2)
+    end
+
+    def isprovided(expr, args)
+      item = properties(expr)[0]
+      return false unless item
+      scenario, property = args[0].split('.', 2)
+      return false if (scenarioIdx = item.project.scenarioIdx(scenario)).nil?
+      item.provided(property, scenarioIdx)
     end
 
     def isresource(expr, args)
